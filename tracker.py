@@ -6,12 +6,38 @@ from bs4 import BeautifulSoup
 from curl_cffi import requests
 
 GRADE_MAP = {
-    "A1": "Eccellente",
-    "A2": "Molto buono",
-    "A3": "Buono",
-    "A4": "Accettabile",
+    "A1": "Excellent",
+    "A2": "Very Good",
+    "A3": "Good",
+    "A4": "Acceptable",
 }
-
+# Map common Italian colors to English
+COLOR_MAP = {
+    "nero": "Black",
+    "nero siderale": "Space Black",
+    "mezzanotte": "Midnight",
+    "onyx black": "Onyx Black",
+    "bianco": "White",
+    "galassia": "Starlight",
+    "argento": "Silver",
+    "grigio": "Gray",
+    "marble gray": "Marble Gray",
+    "oro": "Gold",
+    "giallo": "Yellow",
+    "verde": "Green",
+    "jade green": "Jade Green",
+    "blu": "Blue",
+    "azzurro": "Light Blue",
+    "sapphire blue": "Sapphire Blue",
+    "viola": "Purple",
+    "viola scuro": "Dark Purple",
+    "lilla": "Lilac",
+    "cobalt violet": "Cobalt Violet",
+    "rosso": "Red",
+    "rosa": "Pink",
+    "arancione": "Orange",
+    "sandstone orange": "Sandstone Orange"
+}
 def init_db(db_path="data/rebuy_prices.db"):
     """Creates the data directory and SQLite database if they don't exist."""
     os.makedirs(os.path.dirname(db_path), exist_ok=True)
@@ -52,12 +78,16 @@ def extract_full_matrix(base_url: str):
         data = json.loads(script_tag.string)
         p_view = data.get("productViewResponseDto", {})
 
-        # 2. Collect URLs for all memory sizes
+        # 2. Collect URLs for all memory sizes (UPDATED FIX)
         memory_items = p_view.get("relations", {}).get("memory", [])
-        memory_urls = [
-            f"https://www.rebuy.it/i,{m['id']}/{m['product_slug']}"
-            for m in memory_items if "id" in m and "product_slug" in m
-        ]
+        memory_urls = []
+        
+        for m in memory_items:
+            if "id" in m:
+                # Rebuy splits the slug into category and product names in the relations array
+                category = m.get("category_sanitized_name", "smartphone-e-cellulari")
+                product = m.get("product_sanitized_name", "unknown-product")
+                memory_urls.append(f"https://www.rebuy.it/i,{m['id']}/{category}/{product}")
         
         # Fallback if no memory variants exist
         if not memory_urls:
@@ -89,7 +119,9 @@ def extract_full_matrix(base_url: str):
                 visited_ids.add(p_id)
 
                 model = item.get("basic_name", item.get("name", "Unknown"))
-                color = item.get("originalColor", "Unknown")
+                raw_color = item.get("originalColor", "Unknown").lower()
+                # Translate the color, or fall back to the original name (capitalized) if it's a unique brand color
+                color = COLOR_MAP.get(raw_color, raw_color.title())
                 memory = item.get("memory_size", "Unknown")
 
                 # Extract the price condition matrix
@@ -127,7 +159,7 @@ if __name__ == "__main__":
     DB_PATH = "data/rebuy_prices.db"
     
     # You can swap this URL out for any other phone model on Rebuy
-    TARGET_URL = "https://www.rebuy.it/i,15362306/smartphone-e-cellulari/samsung-galaxy-s24-plus-dual-sim-256gb-onyx-black"
+    TARGET_URL = "https://www.rebuy.it/i,15362308/smartphone-e-cellulari/samsung-galaxy-s24-plus-dual-sim-256gb-cobalt-violet"
     
     init_db(DB_PATH)
     records = extract_full_matrix(TARGET_URL)
