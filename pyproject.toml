@@ -7,7 +7,10 @@ authors = [
     { name = "Owais Ali", email = "s338978@studenti.polito.it" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "matplotlib>=3.11.1",
+    "seaborn>=0.13.2",
+]
 
 [project.scripts]
 rebuypricetracker = "rebuypricetracker:main"
