@@ -1,10 +1,10 @@
 name: Track Rebuy Prices
 
-on:
-  schedule:
-    # Runs at 08:00, 13:00, 18:00, and 23:00 UTC
-    - cron: '30 6,11,16,21 * * *'
-  workflow_dispatch: # Allows you to click a button to run it manually
+# on:
+#   schedule:
+#     # Runs at 08:00, 13:00, 18:00, and 23:00 UTC
+#     - cron: '30 6,11,16,21 * * *'
+#   workflow_dispatch: # Allows you to click a button to run it manually
 
 jobs:
   scrape-and-save:
